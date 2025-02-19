@@ -1,7 +1,7 @@
 import Todo from "./components/Todo";
 import Form from "./components/Form";
 import FilterButton from "./components/FilterButton";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { nanoid } from "nanoid";
 
 function App(props) {
@@ -34,7 +34,27 @@ function App(props) {
         deleteTask={deleteTask}
         editTask={editTask}
       />
-    ));
+  ));
+
+  // Create a reference to the header to use when deleting to-dos
+  const listHeadingRef = useRef(null);
+
+  // Track task length to move focus to the header when -1 is detected
+  const usePrevious = (value) => {
+    const ref = useRef();
+    useEffect(() => {
+      ref.current = value;
+    });
+    return ref.current;
+  };
+  const prevTaskLength = usePrevious(tasks.length);
+
+  // Create a side effect to focus the header when the task length changes
+  useEffect(() => {
+    if (tasks.length < prevTaskLength) {
+      listHeadingRef.current.focus();
+    }
+  }, [tasks.length, prevTaskLength])
 
   function addTask(name) {
     const newKeyId = `todo-${nanoid()}`;
@@ -79,7 +99,7 @@ function App(props) {
       <div className="filters btn-group stack-exception">
         {filterList}
       </div>
-      <h2 id="list-heading">{headingText}</h2>
+      <h2 id="list-heading" tabIndex="-1" ref={listHeadingRef}>{headingText}</h2>
       <ul role="list" className="todo-list stack-large stack-exception"      aria-labelledby="list-heading">
         {taskList}
       </ul>
